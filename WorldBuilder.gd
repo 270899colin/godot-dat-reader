@@ -16,8 +16,8 @@ func chunk(array, by):
 	return chunks
 
 func build(source_file, options):
-	var file = File.new()
-	if file.open(source_file, File.READ) != OK:
+	var file = FileAccess.open(source_file, FileAccess.READ)
+	if file.get_error() != OK:
 		print("Failed to open %s" % source_file)
 		return FAILED
 		
@@ -30,7 +30,7 @@ func build(source_file, options):
 	var scene = PackedScene.new()
 	
 	# Create our nodes
-	var root = Spatial.new()
+	var root = Node3D.new()
 	
 	# Setup the nodes
 	root.name = "Root"
@@ -55,7 +55,7 @@ func build(source_file, options):
 	var err = config.load("./settings.cfg")
 	
 	# Fallback...
-	texture_path = "D:\\Games\\Aliens vs. Predator 2 - dev\\AVP2\\"
+	texture_path = "D:\\Games\\Psycho\\PSYCHO\\"
 	
 	var export_to_lta = false
 	
@@ -90,15 +90,15 @@ func build(source_file, options):
 		var lm_image_texture = null
 		
 		if use_lightmaps:
-			lm_image_texture = ImageTexture.new()
-			lm_image_texture.create_from_image(lm_texture_array)
-			lm_image_texture.set_flags(ImageTexture.FLAGS_DEFAULT + ImageTexture.FLAG_ANISOTROPIC_FILTER + ImageTexture.FLAG_CONVERT_TO_LINEAR)
+			lm_image_texture = ImageTexture.create_from_image(lm_texture_array)
+			# TODO: set_flags doesn't exist in 4.0
+			#lm_image_texture.set_flag1s(ImageTexture.FLAGS_DEFAULT + ImageTexture.FLAG_ANISOTROPIC_FILTER + ImageTexture.FLAG_CONVERT_TO_LINEAR)
 			
 		var cached_textures = {}
 		
 		var i = 0;
 		for mesh in meshes:
-			var mesh_instance = MeshInstance.new()
+			var mesh_instance = MeshInstance3D.new()
 			
 			var tex_name = tex_names[i]
 			var tex = get_texture(tex_name)
@@ -106,20 +106,20 @@ func build(source_file, options):
 			var mat = ShaderMaterial.new()
 			mat.shader = load("res://Addons/LTDatReader/Shaders/LT1.tres") as VisualShader
 			
-			mat.set_shader_param("main_texture", tex)
+			mat.set_shader_parameter("main_texture", tex)
 			
 			if use_lightmaps:
-				mat.set_shader_param("use_lightmap", true)
-				mat.set_shader_param("lm_texture", lm_image_texture)
+				mat.set_shader_parameter("use_lightmap", true)
+				mat.set_shader_parameter("lm_texture", lm_image_texture)
 			else:
-				mat.set_shader_param("use_lightmap", false)
+				mat.set_shader_parameter("use_lightmap", false)
 			
 
 			mesh_instance.name = mesh_names[i]
 			mesh_instance.mesh = mesh
 			root.add_child(mesh_instance)
 			mesh_instance.owner = root
-			mesh_instance.set_surface_material(0, mat)
+			mesh_instance.set_surface_override_material(0, mat)
 			i += 1
 			total_mesh_count+=1
 			
@@ -148,7 +148,7 @@ func build(source_file, options):
 		var i = 0;
 		for mesh in meshes:
 			
-			var mesh_instance = MeshInstance.new()
+			var mesh_instance = MeshInstance3D.new()
 			
 			var tex_name = tex_names[i]
 			var tex = null
@@ -161,14 +161,14 @@ func build(source_file, options):
 			var mat = ShaderMaterial.new()
 			mat.shader = load("res://Addons/LTDatReader/Shaders/LT1.tres") as VisualShader
 			
-			mat.set_shader_param("main_texture", tex)
-			#mat.set_shader_param("lm_texture", lm_image_texture)
+			mat.set_shader_parameter("main_texture", tex)
+			#mat.set_shader_parameter("lm_texture", lm_image_texture)
 
 			mesh_instance.name = mesh_names[i]
 			mesh_instance.mesh = mesh
 			root.add_child(mesh_instance)
 			mesh_instance.owner = root
-			mesh_instance.set_surface_material(0, mat)
+			mesh_instance.set_surface_override_material(0, mat)
 			i += 1
 			total_mesh_count+=1
 			
@@ -193,16 +193,16 @@ func build(source_file, options):
 			# Loop through our pieces, and add them to mesh instances
 			lm_texture_array.save_png("lm_null.png")
 			
-			var lm_image_texture = ImageTexture.new()
-			lm_image_texture.create_from_image(lm_texture_array)
-			lm_image_texture.set_flags(ImageTexture.FLAGS_DEFAULT + ImageTexture.FLAG_ANISOTROPIC_FILTER + ImageTexture.FLAG_CONVERT_TO_LINEAR)
+			var lm_image_texture = ImageTexture.create_from_image(lm_texture_array)
+			# TODO: set_flags doesn't exist in 4.0
+			#lm_image_texture.set_flags(ImageTexture.FLAGS_DEFAULT + ImageTexture.FLAG_ANISOTROPIC_FILTER + ImageTexture.FLAG_CONVERT_TO_LINEAR)
 			
 			var cached_textures = {}
 			
 			var i = 0;
 			for mesh in meshes:
 				
-				var mesh_instance = MeshInstance.new()
+				var mesh_instance = MeshInstance3D.new()
 				
 				var tex_name = tex_names[i]
 				var tex = get_texture(tex_name)
@@ -210,14 +210,14 @@ func build(source_file, options):
 				var mat = ShaderMaterial.new()
 				mat.shader = load("res://Addons/LTDatReader/Shaders/LT1.tres") as VisualShader
 				
-				mat.set_shader_param("main_texture", tex)
-				mat.set_shader_param("lm_texture", lm_image_texture)
+				mat.set_shader_parameter("main_texture", tex)
+				mat.set_shader_parameter("lm_texture", lm_image_texture)
 
 				mesh_instance.name = mesh_names[i]
 				mesh_instance.mesh = mesh
 				root.add_child(mesh_instance)
 				mesh_instance.owner = root
-				mesh_instance.set_surface_material(0, mat)
+				mesh_instance.set_surface_override_material(0, mat)
 				i += 1
 				total_mesh_count+=1
 				
@@ -300,7 +300,7 @@ func build_array_mesh(textured_meshes):
 			var mesh_uvs2 = mesh[5]
 			
 			# Mesh is formatted in triangle fan segments per "EditPoly"
-			st.add_triangle_fan( PoolVector3Array(mesh_verts), PoolVector2Array(mesh_uvs), PoolColorArray(mesh_colours), PoolVector2Array(mesh_uvs2), PoolVector3Array(mesh_normals) )
+			st.add_triangle_fan( PackedVector3Array(mesh_verts), PackedVector2Array(mesh_uvs), PackedColorArray(mesh_colours), PackedVector2Array(mesh_uvs2), PackedVector3Array(mesh_normals) )
 		# End For
 		
 		meshes.append(st.commit())
@@ -354,9 +354,9 @@ func build_array_mesh_jupiter(textured_meshes):
 			if use_lightmap_texture:
 				lightmap_texture = mesh[4]
 			
-			mesh_uvs.invert()
-			mesh_normals.invert()
-			mesh_verts.invert()
+			mesh_uvs.reverse()
+			mesh_normals.reverse()
+			mesh_verts.reverse()
 
 			# Pack in 3 verts at a time!
 			var i = 0
@@ -431,12 +431,12 @@ func fill_array_mesh_jupiter(model, world_meshes = []):
 			
 			
 		
-		var verts = []#PoolVector3Array()
-		var uvs = []#PoolVector2Array()
+		var verts = []#PackedVector3Array()
+		var uvs = []#PackedVector2Array()
 		var uvs2 = []
-		var normals = []#PoolVector3Array()
+		var normals = []#PackedVector3Array()
 		var colours = []
-		var indices = PoolIntArray()
+		var indices = PackedInt32Array()
 		var polies = []
 		var previous_lightmap_texture = null
 		
@@ -496,7 +496,7 @@ func fill_array_mesh_jupiter(model, world_meshes = []):
 		texture_references += data[2]
 		textured_meshes = {}
 	
-	# Texture References is polygon aligned
+	# Texture2D References is polygon aligned
 	return [ meshes, mesh_names, texture_references, lightmap_textures ]
 	
 	pass
@@ -526,12 +526,12 @@ func fill_array_mesh(model, world_models = []):
 	for world_model_index in range(len(world_models)): #model.world_models:
 		var world_model = world_models[world_model_index]
 		
-		var verts = []#PoolVector3Array()
-		var uvs = []#PoolVector2Array()
+		var verts = []#PackedVector3Array()
+		var uvs = []#PackedVector2Array()
 		var uvs2 = []
-		var normals = []#PoolVector3Array()
+		var normals = []#PackedVector3Array()
 		var colours = []
-		var indices = PoolIntArray()
+		var indices = PackedInt32Array()
 		var polies = []
 		
 		# Skip the physics mesh
@@ -677,7 +677,7 @@ func fill_array_mesh(model, world_models = []):
 				var lm_width = lm_image.get_width()
 				var lm_height = lm_image.get_height()
 
-				# Project our face to a flat surface, so we slap it on a uv map
+				# Project our face to a flat surface, so we slap it checked a uv map
 				var poly_u = plane.normal.cross( Vector3.UP )
 				if poly_u.dot(poly_u) < 0.001:
 					poly_u = Vector3.RIGHT
@@ -761,7 +761,7 @@ func fill_array_mesh(model, world_models = []):
 					uvs2.append( new_vert_uv )
 				# End For
 			else:
-				# Assign them to the tiny white square on the lower right of the lightmap image
+				# Assign them to the tiny white square checked the lower right of the lightmap image
 				for disk_vert_index in range(len(poly.disk_verts)):
 					uvs2.append(Vector2(1,0))
 				# End For
@@ -769,11 +769,11 @@ func fill_array_mesh(model, world_models = []):
 			
 			# End UV 2
 			
-			verts.invert()
-			normals.invert()
-			uvs.invert()
-			uvs2.invert()
-			colours.invert()
+			verts.reverse()
+			normals.reverse()
+			uvs.reverse()
+			uvs2.reverse()
+			colours.reverse()
 
 			# Add it to the batch!
 			if texture_name in textured_meshes:
@@ -783,10 +783,10 @@ func fill_array_mesh(model, world_models = []):
 			
 			#print("MEM: ", OS.get_static_memory_usage() / 1000000)
 			
-			verts = [] #PoolVector3Array()
-			uvs = [] #PoolVector2Array()
+			verts = [] #PackedVector3Array()
+			uvs = [] #PackedVector2Array()
 			uvs2 = []
-			normals = [] #PoolVector3Array()
+			normals = [] #PackedVector3Array()
 			colours = []
 			
 			lightmap_frame_index += 1
