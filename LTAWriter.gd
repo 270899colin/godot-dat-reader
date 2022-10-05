@@ -22,7 +22,7 @@ class LTANode:
 	var _depth = 0
 	var _children = []
 
-	func _init(name='unnamed-node', attribute=null):
+	func _init(name='unnamed-node',attribute=null):
 		self._name = name
 		self._attribute = attribute
 		self._depth = 0
@@ -95,13 +95,13 @@ class LTANode:
 		if typeof(value) == TYPE_STRING:
 			return self._serialize_string(value)
 
-		if typeof(value) == TYPE_REAL:
+		if typeof(value) == TYPE_FLOAT:
 			return self._serialize_float(value)
 
 		if typeof(value) == TYPE_VECTOR3:
 			return self._serialize_vector(value)
 
-		if typeof(value) == TYPE_QUAT:
+		if typeof(value) == TYPE_QUATERNION:
 			return self._serialize_quat(value)
 
 		if typeof(value) == TYPE_BASIS:
@@ -458,8 +458,8 @@ class LTAWriter:
 				prop_list.create_prop_entry('bool', 'Subdivide', int( surface.flags & (1<<8) == 0 )) # Flipped!
 				prop_list.create_prop_entry('bool', 'HullMaker', int( surface.flags & (1<<9) != 0 ))
 				prop_list.create_prop_entry('bool', 'AlwaysLightMap', int( surface.flags & (1<<10) != 0 ))
-				prop_list.create_prop_entry('bool', 'DirectionalLight', int( surface.flags & (1<<11) != 0 ))
-				prop_list.create_prop_entry('bool', 'Portal', int( surface.flags & (1<<13) != 0 ))
+				prop_list.create_prop_entry('bool', 'DirectionalLight3D', int( surface.flags & (1<<11) != 0 ))
+				prop_list.create_prop_entry('bool', 'Node3D', int( surface.flags & (1<<13) != 0 ))
 				prop_list.create_prop_entry('bool', 'NoSnap', ( 1 ))
 				prop_list.create_prop_entry('bool', 'SkyPan', int( surface.flags & (1<<15) != 0 ))
 				prop_list.create_prop_entry('bool', 'Additive', int( surface.flags & (1<<19) != 0 ))
@@ -488,10 +488,9 @@ class LTAWriter:
 		# WRITE TO FILE
 		##########################################################
 
-		var file = File.new()
-		file.open(path, File.WRITE)
+		var file = FileAccess.open(path, FileAccess.WRITE)
 		file.store_string(root_node.serialize())
-		file.close()
+		#file.close()
 		
 		print("Finished serializing node list!")
 		
